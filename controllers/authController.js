@@ -10,7 +10,6 @@ const handleAuthUser = async (req, res) => {
     };
 
     const foundUser = await User.findOne({ username }).exec();
-    console.log(foundUser.password)
     if (!foundUser) return res.sendStatus(401) //Unauthorized.
     const match = await bcrypt.compare(password, foundUser.password);
     if (match) {
@@ -24,7 +23,7 @@ const handleAuthUser = async (req, res) => {
                 }
             },
             process.env.ACCESS_TOKEN,
-            { expiresIn: '300s' }
+            { expiresIn: '5m' }
         );
         const refreshToken = jwt.sign(
             { 'username': foundUser.username },
@@ -36,8 +35,8 @@ const handleAuthUser = async (req, res) => {
         const updatedUser = await foundUser.save();
         console.log('AUTH UPDATED TOKEN : ', updatedUser);
 
-        res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }); //secure: true
-        res.json({ accessToken });
+        res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }); //secure: true// sameSite: 'none', secure: true
+        res.json({ roles, accessToken });
     } else {
         res.sendStatus(401);
     }
